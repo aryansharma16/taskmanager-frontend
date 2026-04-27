@@ -84,6 +84,54 @@ const getRoleName = (role, rolesById) => {
   return rolesById?.get(role)?.name || null;
 };
 
+// API rows are membership objects: { _id, user, role, status, organisation, createdAt }
+const getMemberUser = (member) => member?.user || {};
+
+const STATUS_BADGE = {
+  ACTIVE: 'bg-secondary-container/40 text-on-secondary-container border-secondary-container/40 dark:bg-secondary/15 dark:text-secondary dark:border-secondary/30',
+  INACTIVE: 'bg-surface-container-highest text-on-surface-variant border-outline-variant/40',
+  PENDING: 'bg-tertiary-container/30 text-tertiary border-tertiary-container/40 dark:bg-tertiary/15 dark:text-tertiary dark:border-tertiary/30',
+  INVITED: 'bg-tertiary-container/30 text-tertiary border-tertiary-container/40 dark:bg-tertiary/15 dark:text-tertiary dark:border-tertiary/30',
+  SUSPENDED: 'bg-error/15 text-error border-error/30',
+};
+
+const StatusBadge = ({ status }) => {
+  if (!status) return <span className="text-xs text-outline">—</span>;
+  const cls = STATUS_BADGE[status.toUpperCase()] || STATUS_BADGE.INACTIVE;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase ${cls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${
+        status.toUpperCase() === 'ACTIVE' ? 'bg-secondary dark:bg-secondary' :
+        status.toUpperCase() === 'SUSPENDED' ? 'bg-error' :
+        'bg-current'
+      }`} />
+      {status}
+    </span>
+  );
+};
+
+const Avatar = ({ name, email, id, profilePic, size = 36 }) => {
+  const gradient = AVATAR_GRADIENTS[hashString(id || email || name) % AVATAR_GRADIENTS.length];
+  const sizeClass = size === 36 ? 'w-9 h-9 text-xs' : size === 48 ? 'w-12 h-12 text-sm' : 'w-9 h-9 text-xs';
+  if (profilePic) {
+    return (
+      <img
+        src={profilePic}
+        alt={name}
+        className={`${sizeClass} rounded-full object-cover shadow-sm`}
+        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+      />
+    );
+  }
+  return (
+    <div
+      className={`${sizeClass} rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold shadow-sm flex-shrink-0`}
+    >
+      {getInitials(name)}
+    </div>
+  );
+};
+
 const UserManagement = () => {
   const dispatch = useDispatch();
   const { users, loading, error, successMessage } = useSelector((state) => state.users);
@@ -126,12 +174,14 @@ const UserManagement = () => {
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return users;
-    return users.filter((u) => {
-      const roleName = getRoleName(u.role, rolesById) || '';
+    return users.filter((m) => {
+      const u = getMemberUser(m);
+      const roleName = getRoleName(m.role, rolesById) || '';
       return (
         u.name?.toLowerCase().includes(q) ||
         u.email?.toLowerCase().includes(q) ||
-        roleName.toLowerCase().includes(q)
+        roleName.toLowerCase().includes(q) ||
+        m.status?.toLowerCase().includes(q)
       );
     });
   }, [users, search, rolesById]);
@@ -145,13 +195,14 @@ const UserManagement = () => {
     setIsPanelOpen(true);
   };
 
-  const openEditPanel = (user) => {
-    setEditingUser(user);
+  const openEditPanel = (member) => {
+    const u = getMemberUser(member);
+    setEditingUser(member);
     setFormData({
-      name: user.name || '',
-      email: user.email || '',
+      name: u.name || '',
+      email: u.email || '',
       password: '',
-      role: getRoleId(user.role),
+      role: getRoleId(member.role),
     });
     setIsPanelOpen(true);
   };
@@ -191,13 +242,14 @@ const UserManagement = () => {
       }
 
       const newRole = rolesById.get(formData.role);
+      const editingUserName = getMemberUser(editingUser).name;
       setPopup({
         isOpen: true,
         variant: 'warning',
         title: 'Change role for this user?',
         message: (
           <>
-            <span className="font-semibold text-on-surface">{editingUser.name}</span> will be
+            <span className="font-semibold text-on-surface">{editingUserName}</span> will be
             reassigned to{' '}
             <span className="font-semibold text-on-surface">
               {newRole?.name || 'the selected role'}
@@ -225,7 +277,8 @@ const UserManagement = () => {
     submitCreate(payload);
   };
 
-  const handleDelete = (user) => {
+  const handleDelete = (member) => {
+    const u = getMemberUser(member);
     setPopup({
       isOpen: true,
       variant: 'danger',
@@ -233,8 +286,8 @@ const UserManagement = () => {
       message: (
         <>
           You're about to permanently remove{' '}
-          <span className="font-semibold text-on-surface">{user.name}</span>{' '}
-          (<span className="font-mono">{user.email}</span>) from the organisation.
+          <span className="font-semibold text-on-surface">{u.name}</span>{' '}
+          (<span className="font-mono">{u.email}</span>) from the organisation.
           They will lose access immediately and this cannot be undone.
         </>
       ),
@@ -242,7 +295,7 @@ const UserManagement = () => {
       cancelLabel: 'Keep User',
       hideCancel: false,
       onConfirm: () => {
-        dispatch(deleteUser(user._id))
+        dispatch(deleteUser(member._id))
           .unwrap()
           .then(() => closePopup())
           .catch(() => closePopup());
@@ -308,16 +361,16 @@ const UserManagement = () => {
         {[
           { label: 'Total Users', value: users.length, icon: 'group', tone: 'primary' },
           {
+            label: 'Active',
+            value: users.filter((m) => (m.status || '').toUpperCase() === 'ACTIVE').length,
+            icon: 'check_circle',
+            tone: 'secondary',
+          },
+          {
             label: 'Roles',
             value: roles.length,
             icon: 'badge',
             tone: 'tertiary',
-          },
-          {
-            label: 'System Roles',
-            value: roles.filter((r) => r.isCustom === false).length,
-            icon: 'verified',
-            tone: 'secondary',
           },
           {
             label: 'Custom Roles',
@@ -374,7 +427,7 @@ const UserManagement = () => {
                   Role
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
-                  Scope
+                  Status
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
                   Joined
@@ -397,58 +450,59 @@ const UserManagement = () => {
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((user) => {
+                filteredUsers.map((member) => {
+                  const u = getMemberUser(member);
                   const roleObj =
-                    typeof user.role === 'object' ? user.role : rolesById.get(user.role);
+                    typeof member.role === 'object' ? member.role : rolesById.get(member.role);
                   const roleName = roleObj?.name || '—';
                   const roleScope = roleObj?.scope;
-                  const gradient =
-                    AVATAR_GRADIENTS[hashString(user._id || user.email) % AVATAR_GRADIENTS.length];
 
                   return (
                     <tr
-                      key={user._id}
+                      key={member._id}
                       className="hover:bg-surface-container-low/50 dark:hover:bg-surface-container-highest/20 transition-colors group"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div
-                            className={`w-9 h-9 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white text-xs font-bold shadow-sm`}
-                          >
-                            {getInitials(user.name)}
-                          </div>
+                          <Avatar
+                            name={u.name}
+                            email={u.email}
+                            id={u._id}
+                            profilePic={u.profilePic}
+                          />
                           <div className="min-w-0">
                             <p className="font-semibold text-sm text-on-surface truncate">
-                              {user.name}
+                              {u.name || '—'}
                             </p>
                             <p className="text-xs text-on-surface-variant truncate">
-                              {user.email}
+                              {u.email}
                             </p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary-container/15 text-primary-container border border-primary-container/30 dark:bg-primary/15 dark:text-primary dark:border-primary/30">
-                          <span className="material-symbols-outlined text-[14px]">badge</span>
-                          {roleName}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary-container/15 text-primary-container border border-primary-container/30 dark:bg-primary/15 dark:text-primary dark:border-primary/30 w-fit">
+                            <span className="material-symbols-outlined text-[14px]">badge</span>
+                            {roleName}
+                          </span>
+                          {roleScope && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant pl-1">
+                              {roleScope}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        {roleScope ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border bg-tertiary-container/10 text-tertiary border-tertiary-container/20 dark:bg-tertiary/10 dark:text-tertiary dark:border-tertiary/20 uppercase">
-                            {roleScope}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-outline">—</span>
-                        )}
+                        <StatusBadge status={member.status} />
                       </td>
                       <td className="px-6 py-4 text-sm text-on-surface-variant">
-                        {formatDate(user.createdAt)}
+                        {formatDate(member.createdAt)}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={() => openEditPanel(user)}
+                            onClick={() => openEditPanel(member)}
                             className="p-1.5 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-md transition-colors"
                             title="Change role"
                           >
@@ -457,7 +511,7 @@ const UserManagement = () => {
                             </span>
                           </button>
                           <button
-                            onClick={() => handleDelete(user)}
+                            onClick={() => handleDelete(member)}
                             className="p-1.5 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-md transition-colors"
                             title="Remove user"
                           >
@@ -504,27 +558,29 @@ const UserManagement = () => {
 
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
           <form id="user-form" onSubmit={handleSubmit} className="space-y-5">
-            {editingUser && (
-              <div className="flex items-center gap-3 p-4 bg-surface-container-low/60 dark:bg-surface-container-highest/30 rounded-lg border border-outline-variant/30">
-                <div
-                  className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-                    AVATAR_GRADIENTS[
-                      hashString(editingUser._id || editingUser.email) % AVATAR_GRADIENTS.length
-                    ]
-                  } flex items-center justify-center text-white text-sm font-bold`}
-                >
-                  {getInitials(editingUser.name)}
+            {editingUser && (() => {
+              const u = getMemberUser(editingUser);
+              return (
+                <div className="flex items-center gap-3 p-4 bg-surface-container-low/60 dark:bg-surface-container-highest/30 rounded-lg border border-outline-variant/30">
+                  <Avatar
+                    name={u.name}
+                    email={u.email}
+                    id={u._id}
+                    profilePic={u.profilePic}
+                    size={48}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm text-on-surface truncate">
+                      {u.name}
+                    </p>
+                    <p className="text-xs text-on-surface-variant truncate">
+                      {u.email}
+                    </p>
+                  </div>
+                  <StatusBadge status={editingUser.status} />
                 </div>
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm text-on-surface truncate">
-                    {editingUser.name}
-                  </p>
-                  <p className="text-xs text-on-surface-variant truncate">
-                    {editingUser.email}
-                  </p>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {!editingUser && (
               <>
