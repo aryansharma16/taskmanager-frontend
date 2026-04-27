@@ -1,0 +1,63 @@
+[
+  {
+    "id": "dashboard",
+    "title": "Dashboard",
+    "icon": "dashboard",
+    "path": "/dashboard"
+  },
+  {
+    "id": "tasks",
+    "title": "My Tasks",
+    "icon": "task_alt",
+    "path": "/tasks"
+  },
+  {
+    "id": "projects",
+    "title": "Projects",
+    "icon": "folder_open",
+    "path": "/projects"
+  },
+  {
+    "id": "team",
+    "title": "Team",
+    "icon": "group",
+    "path": "/team"
+  },
+  {
+    "id": "calendar",
+    "title": "Calendar",
+    "icon": "calendar_month",
+    "path": "/calendar"
+  },
+  {
+    "id": "reports",
+    "title": "Reports",
+    "icon": "bar_chart",
+    "path": "/reports"
+  },
+  {
+    "id": "rbac",
+    "title": "RBAC",
+    "icon": "admin_panel_settings",
+    "subItems": [
+      {
+        "id": "user-management",
+        "title": "User Management",
+        "icon": "person",
+        "path": "/rbac/users"
+      },
+      {
+        "id": "role-management",
+        "title": "Role Management",
+        "icon": "badge",
+        "path": "/rbac/roles"
+      }
+    ]
+  },
+  {
+    "id": "settings",
+    "title": "Settings",
+    "icon": "settings",
+    "path": "/settings"
+  }
+]
