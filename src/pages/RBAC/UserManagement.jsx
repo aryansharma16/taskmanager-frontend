@@ -220,14 +220,20 @@ const UserManagement = () => {
   const submitCreate = (payload) => {
     dispatch(createUser(payload))
       .unwrap()
-      .then(() => closePanel())
+      .then(() => {
+        closePanel();
+        dispatch(fetchUsers());
+      })
       .catch(() => {});
   };
 
   const submitRoleUpdate = () => {
     dispatch(updateUserRole({ id: editingUser._id, role: formData.role }))
       .unwrap()
-      .then(() => closePanel())
+      .then(() => {
+        closePanel();
+        dispatch(fetchUsers());
+      })
       .catch(() => {});
   };
 
@@ -297,7 +303,10 @@ const UserManagement = () => {
       onConfirm: () => {
         dispatch(deleteUser(member._id))
           .unwrap()
-          .then(() => closePopup())
+          .then(() => {
+            closePopup();
+            dispatch(fetchUsers());
+          })
           .catch(() => closePopup());
       },
     });
@@ -533,14 +542,14 @@ const UserManagement = () => {
       {/* Backdrop */}
       {isPanelOpen && (
         <div
-          className="fixed inset-0 bg-on-background/20 dark:bg-background/80 backdrop-blur-sm z-50 transition-opacity"
+          className="fixed top-0 left-0 w-screen h-screen bg-on-background/20 dark:bg-background/80 backdrop-blur-sm z-50 transition-opacity"
           onClick={closePanel}
         />
       )}
 
       {/* Slide-over panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-lg bg-surface-container-lowest dark:bg-[#0b1326] shadow-2xl z-50 border-l border-outline-variant/30 dark:border-outline-variant/20 transform transition-transform duration-300 ease-in-out flex flex-col ${
+        className={`fixed top-0 right-0 h-screen w-full max-w-lg bg-surface-container-lowest dark:bg-[#0b1326] shadow-2xl z-50 border-l border-outline-variant/30 dark:border-outline-variant/20 transform transition-transform duration-300 ease-in-out flex flex-col ${
           isPanelOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >

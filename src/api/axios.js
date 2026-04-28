@@ -7,12 +7,16 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to attach token if available
+// Request interceptor to attach token + active organisation
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    const orgId = localStorage.getItem('activeOrgId');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (orgId) {
+      config.headers['x-org-id'] = orgId;
     }
     return config;
   },

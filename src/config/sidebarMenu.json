@@ -6,6 +6,12 @@
     "path": "/dashboard"
   },
   {
+    "id": "workspaces",
+    "title": "Workspaces",
+    "icon": "workspaces",
+    "path": "/workspaces"
+  },
+  {
     "id": "tasks",
     "title": "My Tasks",
     "icon": "task_alt",

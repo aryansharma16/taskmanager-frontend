@@ -159,12 +159,18 @@ const RoleManagement = () => {
     if (editingRole) {
       dispatch(updateRole({ id: editingRole._id, roleData: payload }))
         .unwrap()
-        .then(() => closePanel())
+        .then(() => {
+          closePanel();
+          dispatch(fetchRoles());
+        })
         .catch(() => {});
     } else {
       dispatch(createRole(payload))
         .unwrap()
-        .then(() => closePanel())
+        .then(() => {
+          closePanel();
+          dispatch(fetchRoles());
+        })
         .catch(() => {});
     }
   };
@@ -243,7 +249,10 @@ const RoleManagement = () => {
       onConfirm: () => {
         dispatch(deleteRole(role._id))
           .unwrap()
-          .then(() => closePopup())
+          .then(() => {
+            closePopup();
+            dispatch(fetchRoles());
+          })
           .catch(() => closePopup());
       },
     });
@@ -385,14 +394,14 @@ const RoleManagement = () => {
       {/* Slide-over Panel Overlay */}
       {isPanelOpen && (
         <div 
-          className="fixed inset-0 bg-on-background/20 dark:bg-background/80 backdrop-blur-sm z-50 transition-opacity"
+          className="fixed top-0 left-0 w-screen h-screen bg-on-background/20 dark:bg-background/80 backdrop-blur-sm z-50 transition-opacity"
           onClick={closePanel}
         ></div>
       )}
 
       {/* Slide-over Panel */}
       <div 
-        className={`fixed top-0 right-0 h-full w-full max-w-lg bg-surface-container-lowest dark:bg-[#0b1326] shadow-2xl z-50 border-l border-outline-variant/30 dark:border-outline-variant/20 transform transition-transform duration-300 ease-in-out flex flex-col ${
+        className={`fixed top-0 right-0 h-screen w-full max-w-lg bg-surface-container-lowest dark:bg-[#0b1326] shadow-2xl z-50 border-l border-outline-variant/30 dark:border-outline-variant/20 transform transition-transform duration-300 ease-in-out flex flex-col ${
           isPanelOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >

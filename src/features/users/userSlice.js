@@ -142,8 +142,15 @@ const userSlice = createSlice({
       })
       .addCase(createUser.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload) state.users.push(action.payload);
-        state.successMessage = 'User created successfully';
+        // Backend returns { user, membership, alreadyExisted }. The list holds
+        // membership-shaped rows, so push the membership (with its populated
+        // user/role refs). Fall back to flat shape for safety.
+        const payload = action.payload || {};
+        const row = payload.membership || (payload._id ? payload : null);
+        if (row) state.users.push(row);
+        state.successMessage = payload.alreadyExisted
+          ? 'Existing user attached to this organisation'
+          : 'User created successfully';
       })
       .addCase(createUser.rejected, (state, action) => {
         state.loading = false;

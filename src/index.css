@@ -204,13 +204,18 @@
   }
 }
 
+/*
+ * NOTE: this keyframe intentionally animates `opacity` only.
+ * Using `transform` here would make every element with `animate-fade-in`
+ * a containing block for its `position: fixed` descendants (CSS spec).
+ * Slide-over panels and modals inside fade-in pages would then be pinned
+ * to the page content area instead of the viewport.
+ */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-4px) scale(0.97);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }

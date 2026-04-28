@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import DashboardLayout from './layouts/DashboardLayout';
 import RoleManagement from './pages/RBAC/RoleManagement';
 import UserManagement from './pages/RBAC/UserManagement';
+import WorkspaceManagement from './pages/Workspaces/WorkspaceManagement';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -52,6 +53,16 @@ const App = () => {
             <ProtectedRoute>
               <DashboardLayout>
                 <UserManagement />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/workspaces" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <WorkspaceManagement />
               </DashboardLayout>
             </ProtectedRoute>
           } 
