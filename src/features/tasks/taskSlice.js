@@ -145,7 +145,11 @@ export const restoreTask = createAsyncThunk(
 );
 
 // PATCH /workspaces/:id/tasks/:taskId/move
-// data: { statusId, beforeId?, afterId? }
+// We use the API spec's Style A.1 payload — a 0-based `position` index in
+// the target column. `statusId` is included even when the column hasn't
+// changed (the API tolerates it), which keeps the call site simple.
+// The slice doesn't reshape `data`; the page controls the contract.
+//   data: { statusId, position }
 export const moveTask = createAsyncThunk(
   'tasks/moveTask',
   async ({ workspaceId, taskId, data }, { rejectWithValue }) => {

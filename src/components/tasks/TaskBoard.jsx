@@ -30,8 +30,11 @@ import { getColumnStatusId } from './taskHelpers';
  *     move in the UI before the network round-trip resolves.
  *
  * Callbacks:
- *   onMove({ taskId, statusId, beforeId, afterId, fromStatusId, toIndex })
- *     — fired after a *card* drag.
+ *   onMove({ taskId, statusId, fromStatusId, position })
+ *     — fired after a *card* drag. `position` is the 0-based slot in the
+ *       TARGET column the card should occupy AFTER the move (the dragged
+ *       card itself is excluded from the count). This is API spec §5.10
+ *       Style A.1; the parent forwards it as-is to /tasks/:id/move.
  *   onColumnReorder(orderedStatusIds)
  *     — fired after a *column* drag, with the full new pipeline order.
  *       Excludes the synthetic "no status" bucket if present.
@@ -139,67 +142,68 @@ const TaskBoard = ({
 
       let targetStatusId;
       let targetColumn;
-      let toIndex;
+      // `position` is the 0-based slot the dragged card should occupy in the
+      // target column **after** the move (the dragged card itself is excluded
+      // from the count). This matches §5.10 A.1 of the API spec; we send it
+      // directly to /tasks/:id/move and let the backend compute `order`.
+      let position;
 
-      // Drop targets we recognise:
-      //   1) Another card           -> insert before that card.
-      //   2) The column drop zone   -> append to that column.
-      //   3) The column drag handle -> treat as "drop on the column", append.
-      // Anything else: ignore.
-      if (over.data.current?.type === 'column') {
+      if (
+        over.data.current?.type === 'column' ||
+        over.data.current?.type === 'column-handle'
+      ) {
+        // Drop on the column itself (empty drop zone or grip handle) → append
+        // to the END of the target column. The "end" is the post-removal
+        // length, so a same-column "drop on column" doesn't try to insert at
+        // a slot index past the end of the filtered list.
         targetStatusId = over.data.current.statusId;
         targetColumn = columns.find(
           (c) => getColumnStatusId(c) === targetStatusId
         );
-        toIndex = (targetColumn?.tasks || []).length;
-      } else if (over.data.current?.type === 'column-handle') {
-        targetStatusId = over.data.current.statusId;
-        targetColumn = columns.find(
-          (c) => getColumnStatusId(c) === targetStatusId
-        );
-        toIndex = (targetColumn?.tasks || []).length;
+        const destLen = (targetColumn?.tasks || []).filter(
+          (t) => t._id !== active.id
+        ).length;
+        position = destLen;
       } else {
+        // Drop on a card → insert ABOVE that card.
         const overMeta = taskIndex.get(over.id);
         if (!overMeta) return;
         targetStatusId = overMeta.statusId;
         targetColumn = columns[overMeta.columnIdx];
-        toIndex = overMeta.taskIdx;
+
+        // Same-column DOWNWARD drag: removing the dragged task shifts the
+        // over card up by one slot, so the slot directly above the over
+        // card's *post-removal* position is overMeta.taskIdx - 1. For
+        // upward drags or cross-column drops, no shift happens.
+        const sameColumn = fromMeta.statusId === overMeta.statusId;
+        position =
+          sameColumn && fromMeta.taskIdx < overMeta.taskIdx
+            ? overMeta.taskIdx - 1
+            : overMeta.taskIdx;
       }
 
       if (!targetColumn) return;
 
-      // Resolve beforeId / afterId from neighbours in the destination column.
-      // Filter out the dragged task itself so we compute neighbours in the
-      // post-move column as the user perceives it.
-      const destTasks = (targetColumn.tasks || []).filter(
-        (t) => t._id !== active.id
-      );
-      const insertAt = Math.max(0, Math.min(toIndex, destTasks.length));
-      const afterId = insertAt > 0 ? destTasks[insertAt - 1]._id : undefined;
-      const beforeId = insertAt < destTasks.length ? destTasks[insertAt]._id : undefined;
-
-      // No-op detection: if the task ended up in the same place, skip the API.
+      // No-op detection (per spec §5.10): if the task would end up at its
+      // current slot in the same column, the backend now responds with
+      // `400 Move did not change the task position…` instead of a silent
+      // 200. Catch it on the FE so we never fire the request at all.
       const sameColumn = fromMeta.statusId === targetStatusId;
-      const originalIdxAfterRemove = (
-        columns[fromMeta.columnIdx]?.tasks || []
-      ).findIndex((t) => t._id === active.id);
-      if (sameColumn && originalIdxAfterRemove === toIndex) return;
+      if (sameColumn && position === fromMeta.taskIdx) return;
 
       // Optimistic UI update first.
       onOptimisticMove?.({
         taskId: active.id,
         fromStatusId: fromMeta.statusId,
         toStatusId: targetStatusId,
-        toIndex: insertAt,
+        toIndex: position,
       });
 
       onMove?.({
         taskId: active.id,
         statusId: targetStatusId,
         fromStatusId: fromMeta.statusId,
-        beforeId,
-        afterId,
-        toIndex: insertAt,
+        position,
       });
     },
     [columns, onMove, onOptimisticMove, taskIndex]

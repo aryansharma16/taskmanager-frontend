@@ -278,12 +278,17 @@ const WorkspaceTasks = () => {
   const handleOptimisticMove = (params) => {
     dispatch(optimisticMoveTask(params));
   };
-  const handleMove = ({ taskId, statusId, beforeId, afterId }) => {
+  // We use the spec's recommended Style A.1 payload: a 0-based `position`
+  // index in the target column. It sidesteps the prev/next swap bug that
+  // beforeId/afterId is famous for, and dnd-kit hands us the index for free.
+  // The backend computes `order` from `position` and the post-removal
+  // neighbours, so we never have to think about fractional spacing here.
+  const handleMove = ({ taskId, statusId, position }) => {
     dispatch(
       moveTask({
         workspaceId,
         taskId,
-        data: { statusId, beforeId, afterId },
+        data: { statusId, position },
       })
     )
       .unwrap()
