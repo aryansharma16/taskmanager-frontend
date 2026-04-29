@@ -159,6 +159,10 @@
     animation: fadeIn 0.15s ease-out;
   }
 
+  .animate-slide-in {
+    animation: slideIn 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
   /* Slim, theme-aware scrollbar used in side panels, dropdowns, etc. */
   .custom-scrollbar {
     scrollbar-width: thin;
@@ -216,6 +220,22 @@
     opacity: 0;
   }
   to {
+    opacity: 1;
+  }
+}
+
+/*
+ * Slide-over panel intro. Used by elements that are themselves inside a
+ * `position: fixed` parent — the transform here doesn't leak a containing
+ * block onto any unrelated descendants because the parent is already fixed.
+ */
+@keyframes slideIn {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
     opacity: 1;
   }
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   fetchWorkspaces,
   createWorkspace,
@@ -87,6 +88,7 @@ const EMPTY_FORM = {
 
 const WorkspaceManagement = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const {
     items: workspaces,
     loading,
@@ -788,12 +790,30 @@ const WorkspaceManagement = () => {
                         {formatDate(w.createdAt)}
                       </span>
                     </div>
+
+                    {!archived && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/workspaces/${w._id}/tasks`)}
+                        className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-primary-container/30 dark:bg-primary/15 text-primary hover:bg-primary-container/50 dark:hover:bg-primary/25 border border-primary-container/40 dark:border-primary/30 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">view_kanban</span>
+                        Open tasks
+                      </button>
+                    )}
                   </div>
 
                   {/* Hover actions */}
                   <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     {!archived && (
                       <>
+                        <button
+                          onClick={() => navigate(`/workspaces/${w._id}/tasks`)}
+                          className="p-1.5 rounded-md bg-on-background/40 text-white backdrop-blur-sm hover:bg-on-background/60 transition-colors"
+                          title="Open tasks"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">view_kanban</span>
+                        </button>
                         <button
                           onClick={() => openEditPanel(w)}
                           className="p-1.5 rounded-md bg-on-background/40 text-white backdrop-blur-sm hover:bg-on-background/60 transition-colors"

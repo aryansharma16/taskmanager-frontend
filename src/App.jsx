@@ -7,6 +7,8 @@ import DashboardLayout from './layouts/DashboardLayout';
 import RoleManagement from './pages/RBAC/RoleManagement';
 import UserManagement from './pages/RBAC/UserManagement';
 import WorkspaceManagement from './pages/Workspaces/WorkspaceManagement';
+import WorkspaceTasks from './pages/Tasks/WorkspaceTasks';
+import StatusManagement from './pages/Statuses/StatusManagement';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -66,6 +68,26 @@ const App = () => {
               </DashboardLayout>
             </ProtectedRoute>
           } 
+        />
+        <Route
+          path="/workspaces/:id/tasks"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <WorkspaceTasks />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspaces/:id/statuses"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <StatusManagement />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
         />
         
         {/* Catch all route */}
