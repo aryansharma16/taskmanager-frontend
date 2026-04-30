@@ -61,6 +61,24 @@ const TaskBoard = ({
     })
   );
 
+  // Two SortableContexts (columns + tasks) live inside the same DnDContext,
+  // so a global `closestCorners` will happily pick a task card as the "over"
+  // target while the user is dragging a column header — and our column-drag
+  // handler then bails out because over.id doesn't start with `col:`. Scope
+  // the detection by drag type: column drags only collide with column slots,
+  // task drags consider every droppable as before.
+  const collisionDetection = useCallback((args) => {
+    const isColumnDrag =
+      args.active?.data?.current?.type === 'column-handle';
+    if (!isColumnDrag) return closestCorners(args);
+
+    const columnContainers = args.droppableContainers.filter((c) => {
+      const id = c.id;
+      return typeof id === 'string' && id.startsWith('col:');
+    });
+    return closestCorners({ ...args, droppableContainers: columnContainers });
+  }, []);
+
   // Build a quick lookup: taskId -> { columnIdx, taskIdx, statusId }
   const taskIndex = useMemo(() => {
     const idx = new Map();
@@ -261,7 +279,7 @@ const TaskBoard = ({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}

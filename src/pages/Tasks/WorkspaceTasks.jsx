@@ -378,7 +378,7 @@ const WorkspaceTasks = () => {
   const canCreate = !isWorkspaceArchived;
 
   return (
-    <div className="animate-fade-in flex flex-col h-[calc(100vh-7rem)]">
+    <div className="animate-fade-in flex flex-col flex-1 min-h-0">
       {/* Toast */}
       {toast && (
         <div
@@ -394,7 +394,7 @@ const WorkspaceTasks = () => {
 
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1 sm:flex-initial">
           <Link
             to="/workspaces"
             className="inline-flex items-center gap-1 text-[11px] font-semibold text-on-surface-variant hover:text-primary mb-1"
@@ -402,7 +402,7 @@ const WorkspaceTasks = () => {
             <span className="material-symbols-outlined text-[14px]">arrow_back</span>
             Workspaces
           </Link>
-          <h1 className="text-2xl font-bold text-on-surface flex items-center gap-2 truncate">
+          <h1 className="text-xl sm:text-2xl font-bold text-on-surface flex items-center gap-2 truncate">
             {workspace?.name || 'Workspace'}
             {isWorkspaceArchived && (
               <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
@@ -410,7 +410,7 @@ const WorkspaceTasks = () => {
               </span>
             )}
           </h1>
-          <p className="text-xs text-on-surface-variant mt-0.5">
+          <p className="text-xs text-on-surface-variant mt-0.5 truncate">
             {totalTasks} {totalTasks === 1 ? 'task' : 'tasks'} across {board.columns.length}{' '}
             {board.columns.length === 1 ? 'column' : 'columns'}
             {visibleTasks !== totalTasks && (
@@ -419,15 +419,15 @@ const WorkspaceTasks = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           {/* Search */}
-          <div className="relative">
+          <div className="relative flex-1 min-w-[10rem] sm:flex-initial">
             <input
               type="search"
               value={filter.q}
               onChange={(e) => setFilter((f) => ({ ...f, q: e.target.value }))}
               placeholder="Search tasks…"
-              className="pl-8 pr-3 py-2 rounded-lg border border-outline-variant/40 dark:border-outline-variant/20 bg-surface dark:bg-surface-container-low text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/40 w-56"
+              className="pl-8 pr-3 py-2 rounded-lg border border-outline-variant/40 dark:border-outline-variant/20 bg-surface dark:bg-surface-container-low text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/40 w-full sm:w-56"
             />
             <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
               search
@@ -438,7 +438,7 @@ const WorkspaceTasks = () => {
             <select
               value={filter.priorityId}
               onChange={(e) => setFilter((f) => ({ ...f, priorityId: e.target.value }))}
-              className="px-3 py-2 rounded-lg border border-outline-variant/40 dark:border-outline-variant/20 bg-surface dark:bg-surface-container-low text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="px-3 py-2 rounded-lg border border-outline-variant/40 dark:border-outline-variant/20 bg-surface dark:bg-surface-container-low text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 max-w-[10rem]"
             >
               <option value="">All priorities</option>
               {priorities.map((p) => (
@@ -453,7 +453,7 @@ const WorkspaceTasks = () => {
             <select
               value={filter.assigneeId}
               onChange={(e) => setFilter((f) => ({ ...f, assigneeId: e.target.value }))}
-              className="px-3 py-2 rounded-lg border border-outline-variant/40 dark:border-outline-variant/20 bg-surface dark:bg-surface-container-low text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="px-3 py-2 rounded-lg border border-outline-variant/40 dark:border-outline-variant/20 bg-surface dark:bg-surface-container-low text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 max-w-[10rem]"
             >
               <option value="">All assignees</option>
               {workspaceMembers.map((m) => {
@@ -499,14 +499,14 @@ const WorkspaceTasks = () => {
             title="Manage statuses (Kanban columns)"
           >
             <span className="material-symbols-outlined text-[16px]">view_column</span>
-            Manage statuses
+            <span className="hidden md:inline">Manage statuses</span>
           </button>
 
           <button
             type="button"
             disabled={!canCreate || statuses.length === 0}
             onClick={() => openCreatePanel(null)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold bg-primary text-on-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-bold bg-primary text-on-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
             title={
               statuses.length === 0
                 ? 'Define statuses first'
@@ -516,7 +516,7 @@ const WorkspaceTasks = () => {
             }
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
-            New task
+            <span className="hidden sm:inline">New task</span>
           </button>
         </div>
       </div>

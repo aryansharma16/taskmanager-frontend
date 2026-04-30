@@ -43,7 +43,7 @@
   },
   {
     "id": "rbac",
-    "title": "User and Role Management",
+    "title": "User Access Control",
     "icon": "admin_panel_settings",
     "subItems": [
       {

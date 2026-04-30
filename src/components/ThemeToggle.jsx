@@ -7,7 +7,10 @@ const themes = [
   { value: 'system', icon: 'desktop_windows', label: 'System' },
 ];
 
-const ThemeToggle = () => {
+const DEFAULT_TRIGGER_CLASS =
+  'flex items-center justify-center w-9 h-9 rounded-lg glass-panel text-on-surface hover:bg-on-surface/10 transition-all duration-200 active:scale-90';
+
+const ThemeToggle = ({ triggerClassName, menuAlign = 'right', onOpenChange }) => {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
@@ -23,6 +26,10 @@ const ThemeToggle = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    onOpenChange?.(open);
+  }, [open, onOpenChange]);
+
   const currentIcon = themes.find((t) => t.value === theme)?.icon || 'dark_mode';
 
   return (
@@ -31,13 +38,20 @@ const ThemeToggle = () => {
       <button
         id="theme-toggle-btn"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center justify-center w-9 h-9 rounded-lg glass-panel text-on-surface hover:bg-on-surface/10 transition-all duration-200 active:scale-90"
+        className={triggerClassName || DEFAULT_TRIGGER_CLASS}
         aria-label="Change theme"
         title="Change theme"
       >
         <span
           className="material-symbols-outlined text-[20px] transition-transform duration-300"
-          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+          style={{
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            // Override the global thin outlined axis values so the sun /
+            // moon / desktop glyph reads as a solid, dense shape — the
+            // default FILL=0 wght=400 sun was too sparse to see in light
+            // mode at 20px next to the denser rail icons.
+            fontVariationSettings: "'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24",
+          }}
         >
           {currentIcon}
         </span>
@@ -45,7 +59,11 @@ const ThemeToggle = () => {
 
       {/* Dropdown Menu */}
       {open && (
-        <div className="absolute right-0 mt-2 w-40 glass-card rounded-xl shadow-2xl border border-outline-variant/30 overflow-hidden z-[100] animate-fade-in">
+        <div
+          className={`absolute mt-2 w-40 glass-card rounded-xl shadow-2xl border border-outline-variant/30 overflow-hidden z-[100] animate-fade-in ${
+            menuAlign === 'left' ? 'left-0' : 'right-0'
+          }`}
+        >
           {themes.map((t) => (
             <button
               key={t.value}
