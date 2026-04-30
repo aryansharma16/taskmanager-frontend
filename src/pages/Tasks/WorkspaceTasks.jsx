@@ -97,7 +97,7 @@ const WorkspaceTasks = () => {
   // ----- Local UI state -----
   const [panel, setPanel] = useState({ open: false, task: null, parentTask: null });
   const [popup, setPopup] = useState(null);
-  const [filter, setFilter] = useState({ q: '', priorityId: '', assigneeId: '' });
+  const [filter, setFilter] = useState({ q: '', priorityId: '' });
 
   // ----- Effects: load all the data we need -----
   const refreshBoard = () => dispatch(fetchBoard({ workspaceId }));
@@ -166,12 +166,6 @@ const WorkspaceTasks = () => {
         if (filter.priorityId) {
           const pId = typeof t.priority === 'object' ? t.priority?._id : t.priority;
           if (pId !== filter.priorityId) return false;
-        }
-        if (filter.assigneeId) {
-          const ids = (t.assignees || []).map((a) =>
-            typeof a === 'object' ? a._id : a
-          );
-          if (!ids.includes(filter.assigneeId)) return false;
         }
         return true;
       }),
@@ -449,28 +443,10 @@ const WorkspaceTasks = () => {
             </select>
           )}
 
-          {workspaceMembers.length > 0 && (
-            <select
-              value={filter.assigneeId}
-              onChange={(e) => setFilter((f) => ({ ...f, assigneeId: e.target.value }))}
-              className="px-3 py-2 rounded-lg border border-outline-variant/40 dark:border-outline-variant/20 bg-surface dark:bg-surface-container-low text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 max-w-[10rem]"
-            >
-              <option value="">All assignees</option>
-              {workspaceMembers.map((m) => {
-                const u = m.user || m;
-                return (
-                  <option key={u._id} value={u._id}>
-                    {u.name || u.email}
-                  </option>
-                );
-              })}
-            </select>
-          )}
-
-          {(filter.q || filter.priorityId || filter.assigneeId) && (
+          {(filter.q || filter.priorityId) && (
             <button
               type="button"
-              onClick={() => setFilter({ q: '', priorityId: '', assigneeId: '' })}
+              onClick={() => setFilter({ q: '', priorityId: '' })}
               className="text-[11px] font-semibold text-on-surface-variant hover:text-primary px-2"
             >
               Clear

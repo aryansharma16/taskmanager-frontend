@@ -254,21 +254,24 @@ const TaskBoard = ({
   if (columns.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center py-12 px-4">
-        <div className="w-16 h-16 rounded-2xl bg-primary-container/30 dark:bg-primary/15 flex items-center justify-center mb-4">
-          <span className="material-symbols-outlined text-[36px] text-primary">
-            view_kanban
-          </span>
+        <div className="relative w-20 h-20 mb-5">
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/30 via-primary/15 to-transparent blur-xl" />
+          <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-primary-container/40 to-primary/10 dark:from-primary/25 dark:to-primary/5 flex items-center justify-center border border-primary/20 shadow-lg">
+            <span className="material-symbols-outlined text-[40px] text-primary">
+              view_kanban
+            </span>
+          </div>
         </div>
-        <h3 className="text-lg font-bold text-on-surface mb-1">
+        <h3 className="text-xl font-bold text-on-surface mb-2 tracking-tight">
           The board is empty
         </h3>
-        <p className="text-sm text-on-surface-variant max-w-md">
+        <p className="text-sm text-on-surface-variant max-w-md leading-relaxed">
           A board needs at least one <strong>status</strong> to act as a
           column (e.g. "To Do", "In Progress", "Done"). Statuses are
           configured per workspace — once they're set up here, your tasks
           will appear in the matching column.
         </p>
-        <p className="text-xs text-on-surface-variant max-w-md mt-3">
+        <p className="text-xs text-on-surface-variant/80 max-w-md mt-3">
           If you've already configured statuses but don't see them, try
           refreshing the board.
         </p>
@@ -284,7 +287,7 @@ const TaskBoard = ({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex-1 overflow-x-auto custom-scrollbar pb-2 -mx-2 px-2">
+      <div className="flex-1 overflow-x-auto custom-scrollbar pb-3 -mx-2 px-2">
         {/*
           Two nested SortableContexts share the same DnDContext:
             - Outer (here): the columns row, sorted horizontally. Active item
@@ -298,7 +301,7 @@ const TaskBoard = ({
           items={columnIds}
           strategy={horizontalListSortingStrategy}
         >
-          <div className="flex gap-3 min-h-full items-start">
+          <div className="flex gap-4 min-h-full items-start">
             {columns.map((col) => {
               const status =
                 typeof col.status === 'object'
@@ -322,29 +325,48 @@ const TaskBoard = ({
 
       <DragOverlay dropAnimation={{ duration: 200 }}>
         {activeTask ? (
-          <div className="w-72 sm:w-80 rotate-1">
+          <div className="w-72 sm:w-80 rotate-2 cursor-grabbing">
             <TaskCard task={activeTask} isDragOverlay />
           </div>
         ) : activeColumn ? (
-          <div className="w-72 sm:w-80 rotate-1 rounded-xl border border-primary/40 bg-surface dark:bg-surface-container-low/90 shadow-2xl px-3 py-2 flex items-center gap-2 ring-2 ring-primary-container dark:ring-primary">
-            <span
-              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-              style={{
-                backgroundColor:
-                  (typeof activeColumn.status === 'object'
-                    ? activeColumn.status.color
-                    : null) || '#94a3b8',
-              }}
-            />
-            <span className="text-xs font-bold uppercase tracking-wider text-on-surface truncate">
-              {(typeof activeColumn.status === 'object'
-                ? activeColumn.status.name
-                : 'Status') || 'Status'}
-            </span>
-            <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md bg-surface-container-low dark:bg-surface-container-highest/50 text-on-surface-variant">
-              {(activeColumn.tasks || []).length}
-            </span>
-          </div>
+          (() => {
+            const colStatus =
+              typeof activeColumn.status === 'object'
+                ? activeColumn.status
+                : { name: 'Status' };
+            const colColor = colStatus.color || '#94a3b8';
+            return (
+              <div
+                className="w-72 sm:w-80 rotate-2 rounded-2xl border border-primary/40 bg-surface-container-lowest dark:bg-surface-container-low/95 shadow-2xl ring-2 ring-primary/30 dark:ring-primary/50 overflow-hidden"
+              >
+                <div
+                  aria-hidden
+                  className="h-1"
+                  style={{
+                    background: `linear-gradient(90deg, ${colColor}cc 0%, ${colColor}66 100%)`,
+                  }}
+                />
+                <div className="px-3 py-2.5 flex items-center gap-2">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                    style={{
+                      backgroundColor: colColor,
+                      boxShadow: `0 0 8px ${colColor}80`,
+                    }}
+                  />
+                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-on-surface truncate">
+                    {colStatus.name || 'Status'}
+                  </span>
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-md text-on-surface-variant tabular-nums border border-outline-variant/30"
+                    style={{ backgroundColor: `${colColor}1f` }}
+                  >
+                    {(activeColumn.tasks || []).length}
+                  </span>
+                </div>
+              </div>
+            );
+          })()
         ) : null}
       </DragOverlay>
     </DndContext>
